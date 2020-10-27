@@ -50,6 +50,18 @@ namespace TrailAid.Services
             using (var ctx = new ApplicationDbContext())
             {
                 int result = 0;
+                
+
+                try { var park = ctx.Parks.Single(e => e.ID == model.ParkID); }
+                catch {if (entity.Park == null) result += 1;}
+
+                try { var city = ctx.Cities.Single(e => e.ID == model.CityID); }
+                catch {if (entity.City == null) result += 2;}
+
+                if (result == 1) return "Invalid Park ID";
+                if (result == 2) return "Invalid City ID";
+                if (result == 3) return "Invalid City ID & Park ID";
+
                 try
                 {
                     ctx.Trails.Add(entity);
@@ -57,29 +69,6 @@ namespace TrailAid.Services
                     return "Okay";
                 }
                 catch { }
-
-                try
-                {
-                    var park = ctx.Parks.Single(e => e.ID == model.ParkID);
-                }
-                catch
-                {
-                    if (entity.Park == null) result += 1;
-                }
-
-                try
-                {
-                    var city = ctx.Cities.Single(e => e.ID == model.CityID);
-                }
-                catch
-                {
-                    if (entity.City == null) result += 2;
-                }
-
-                if (result == 1) return "Invalid Park ID";
-                if (result == 2) return "Invalid City ID";
-                if (result == 3) return "Invalid City ID & Park ID";
-
                 return "True";
             }
         }
@@ -152,34 +141,30 @@ namespace TrailAid.Services
                 entity.Difficulty = model.Difficulty;
                 entity.Description = model.Description;
                 entity.Distance = model.Distance;
+               
                 entity.TypeOfTerrain = model.TypeOfTerrain;
                 entity.Elevation = model.Elevation;
                 entity.RouteType = model.RouteType;
 
                 if (model.Tags != null)
                 {
-                    foreach (var tag in entity.Tags.Split(' '))
+                    foreach (var tag in model.Tags.Split(' '))
                     {
                         if (!entity.AllTags.ListOfAllTags.Contains(tag))
                         {
                             return "Tag Error";
                         }
-                        else if (entity.Tags.Contains(model.Tags))
+                        else if (entity.Tags != null && entity.Tags.Contains(model.Tags))
                         {
                             entity.Tags = entity.Tags;
                             return "Tag Already Exists";
                         }
-                        else
-                        {
-                            entity.Tags = $"{entity.Tags} " + model.Tags;
-                        }
+                        entity.Tags += $"{model.Tags} ";
                     }
                 }
-                else { entity.Tags = model.Tags; }
 
                 try
                 {
-                    ctx.Trails.Add(entity);
                     ctx.SaveChanges();
                     return "Okay";
                 }
